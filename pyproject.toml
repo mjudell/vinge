@@ -1,0 +1,11 @@
+[project]
+name = "vinge"
+version = "0.0.1"
+dependencies = ["llama-cpp-python", "numpy", "pandas", "requests", "scikit-learn", "tqdm"]
+
+[project.scripts]
+vinge = "vinge.cli:main"
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
