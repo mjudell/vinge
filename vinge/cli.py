@@ -1,4 +1,5 @@
 from openai import OpenAI
+from prettytable import PrettyTable
 import argparse
 import json
 import os
@@ -31,6 +32,8 @@ def main() -> int:
         return run_init(args)
     elif args.task == "submit":
         return run_submit(args)
+    elif args.task == "status":
+        return run_status(args)
 
     parser.print_help()
 
@@ -112,6 +115,44 @@ def run_submit(args) -> int:
         print(batch.to_json(), file=f)
 
     client.close()
+
+    return 0
+
+
+def run_status(args) -> int:
+    """
+    Get status of all pending jobs
+    """
+    client = OpenAI(api_key=utils.get_openai_key())
+
+    records = []
+    table = PrettyTable()
+    table.field_names = ["Job", "Status", "Progress (%)"]
+
+    for job in utils.fetch_job_log():
+        job_dir = os.path.join(job["output_basedir"], job["name"])
+        job_pth = os.path.join(job_dir, "batch.json")
+
+        with open(job_pth, "r") as f:
+            batch = json.load(f)
+
+        batch = client.batches.retrieve(batch["id"]).to_dict()
+
+        with open(job_pth, "w") as f:
+            json.dump(batch, f)
+
+        name = job["name"]
+        status = batch["status"]
+        if batch["request_counts"]["total"] > 0:
+            progress = round(100 * batch["request_counts"]["completed"] / batch["request_counts"]["total"])
+        else:
+            progress = None
+
+        table.add_row([name, status, progress])
+
+    client.close()
+
+    print(table)
 
     return 0
 
