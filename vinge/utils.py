@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import requests
 
 import vinge.config as config
@@ -40,3 +41,16 @@ def set_openai_key(key: str) -> None:
         print(key, file=f)
     return None
 
+
+def read_namelist(pth: str) -> pd.DataFrame:
+    """
+    Read a list of company names
+
+    Parameters
+    ----------
+    pth: str
+        Path on disk of name list
+    """
+    df = pd.read_csv(pth, header=0, dtype=object)
+    assert df.columns[0] == "id" and df.columns[1] == "name"
+    return df
