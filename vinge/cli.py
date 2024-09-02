@@ -11,8 +11,8 @@ import vinge.utils as utils
 def main() -> int:
     parser = argparse.ArgumentParser(description="Link financial datasets on noisy names")
     parser.add_argument("task", help="[ configure | link ]", type=str)
-    parser.add_argument("--candidate-links", help="Number of candidates per lhs to identify with embeddings", type=int)
-    parser.add_argument("--final-links", help="Number of final matches per lhs", type=int)
+    parser.add_argument("--ngram-candidates", help="Number of candidates derived from ngram embeddings", type=int)
+    parser.add_argument("--mistral-candidates", help="Number of candidates derived from Mistral embeddings", type=int)
     parser.add_argument("--left", help="Left table path", type=str)
     parser.add_argument("--right", help="Right table path", type=str)
     parser.add_argument("--output", help="Output directory for results", type=str)
