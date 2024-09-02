@@ -4,7 +4,9 @@ Use local embeddings to find top right candidates for each left entry
 from dataclasses import dataclass
 from llama_cpp import Llama
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.pipeline import Pipeline
 from tqdm.auto import tqdm
 from typing import List, Tuple
 from uuid import uuid4
@@ -83,7 +85,10 @@ def _get_ngram_embedder(names: List[str]) -> CountVectorizer:
     names: List[str]
         The full set of left and right company names
     """
-    model = CountVectorizer(ngram_range=(1, 3), analyzer="char_wb", max_features=8192, lowercase=True)
+    model = Pipeline([
+        ("count", CountVectorizer(ngram_range=(3, 6), analyzer="char_wb", max_features=16384, lowercase=True)),
+        ("tfidf", TfidfTransformer()),
+    ])
     model.fit(names)
     return model
 

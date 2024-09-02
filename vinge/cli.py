@@ -198,6 +198,8 @@ def run_fetch(args) -> int:
 
     results.to_csv(os.path.join(job_dir, "results.csv"), header=True, index=False)
 
+    utils.delete_job(args.job)
+
     return 0
 
 
