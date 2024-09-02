@@ -17,12 +17,12 @@ import vinge.utils as utils
 def main() -> int:
     parser = argparse.ArgumentParser(description="Link financial datasets on noisy names")
     parser.add_argument("task", help="[ configure | init | submit | status | fetch ]", type=str)
-    parser.add_argument("--id", help="Unique identifier for this query", type=str)
+    parser.add_argument("--job", help="Unique identifier for this job", type=str)
     parser.add_argument("--ngram-candidates", help="Number of candidates derived from ngram embeddings", type=int)
     parser.add_argument("--mistral-candidates", help="Number of candidates derived from Mistral embeddings", type=int)
     parser.add_argument("--left", help="Left table path", type=str)
     parser.add_argument("--right", help="Right table path", type=str)
-    parser.add_argument("--output-basedir", help="Base directory for results (append id)", type=str)
+    parser.add_argument("--output-basedir", help="Base directory for results (append job)", type=str)
 
     args = parser.parse_args()
 
@@ -62,10 +62,10 @@ def run_init(args) -> int:
     Initialize the matching batch job
     """
     # create job log record
-    utils.create_job(args.id, args.output_basedir)
+    utils.create_job(args.job, args.output_basedir)
 
     # create job directory
-    tgt = os.path.join(args.output_basedir, args.id)
+    tgt = os.path.join(args.output_basedir, args.job)
     if os.path.exists(tgt):
         shutil.rmtree(tgt)
 
@@ -97,7 +97,7 @@ def run_submit(args) -> int:
     """
     client = OpenAI(api_key=utils.get_openai_key())
 
-    job = utils.fetch_job(args.id)
+    job = utils.fetch_job(args.job)
     job_dir = os.path.join(job["output_basedir"], job["name"])
 
     batch_input_file = client.files.create(

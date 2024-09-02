@@ -19,7 +19,7 @@ vinge configure
 
 # create batch query for openai
 vinge init \
-    --id example \
+    --job example \
     --ngram-candidates 5 \
     --mistral-candidates 5 \
     --left vinge/examples/ishares.csv \
@@ -27,13 +27,13 @@ vinge init \
     --output-basedir vinge/examples
 
 # submit batch query
-vinge submit --id example
+vinge submit --job example
 
 # check status of submitted batch queries
 vinge status
 
 # fetch a complete query
-vinge fetch --id example
+vinge fetch --job example
 ```
 
 # Architecture
