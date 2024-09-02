@@ -7,6 +7,9 @@ Link financial datasets using noisy company names.
 Linux only.
 
 ```bash
+# gpu support on debian
+bash vinge/gpu.sh
+
 # install
 git clone https://github.com/mjudell/vinge.git
 pip install ./vinge
