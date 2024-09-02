@@ -4,7 +4,7 @@ Link financial datasets using noisy company names.
 
 # HOWTO
 
-Linux only.
+Linux only. Do not parallelize with `xargs`.
 
 ```bash
 # (optional) enable gpu support on debian
@@ -17,13 +17,23 @@ pip install ./vinge
 # configure (pull language model binaries, configure api keys, etc)
 vinge configure
 
-# example
-vinge link \
-    --ngram-candidates 3 \
-    --mistral-candidates 7 \
+# create batch query for openai
+vinge init \
+    --id example \
+    --ngram-candidates 5 \
+    --mistral-candidates 5 \
     --left vinge/examples/ishares.csv \
     --right vinge/examples/13f.csv \
-    --ouput vinge/examples/ishares_13f_links.csv
+    --output-basedir vinge/examples
+
+# submit batch query
+vinge submit --id example
+
+# check status of submitted batch queries
+vinge status
+
+# fetch a complete query
+vinge fetch --id example
 ```
 
 # Architecture

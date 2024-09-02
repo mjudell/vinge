@@ -1,9 +1,13 @@
+"""
+Use local embeddings to find top right candidates for each left entry
+"""
 from dataclasses import dataclass
 from llama_cpp import Llama
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
 from typing import List, Tuple
+from uuid import uuid4
 import numpy as np
 import os
 import pandas as pd
@@ -159,7 +163,7 @@ def block(left: pd.DataFrame, right: pd.DataFrame, num_candidates: int, method: 
     Returns
     -------
     pd.DataFrame
-        l_id, r_id, l_name, r_name, block_method, block_similarity, block_rank
+        uuid, l_id, r_id, l_name, r_name, block_method, block_similarity, block_rank
     """
     embedder = {
         "ngram": get_ngram_embeddings,
@@ -170,17 +174,20 @@ def block(left: pd.DataFrame, right: pd.DataFrame, num_candidates: int, method: 
 
     sim = cosine_similarity(l_emb.emb, r_emb.emb)
 
-    l_ids = np.tile(l_emb.ids[:, None], (num_candidates,)).ravel()
-    l_names = l_emb.names[l_ids]
+    l_idx = np.tile(np.arange(l_emb.ids.shape[0])[:, None], (num_candidates,)).ravel()
+    l_ids = l_emb.ids[l_idx]
+    l_names = l_emb.names[l_idx]
 
-    r_ids = np.argsort(sim, axis=1)[:, -num_candidates:][:, ::-1].ravel()
-    r_names = r_emb.names[r_ids]
+    r_idx = np.argsort(sim, axis=1)[:, -num_candidates:][:, ::-1].ravel()
+    r_ids = r_emb.ids[r_idx]
+    r_names = r_emb.names[r_idx]
 
     n_rows, n_cols = sim.shape
     sim = sim.ravel()
-    sim = sim[l_ids * n_cols + r_ids]
+    sim = sim[l_idx * n_cols + r_idx]
 
     res = pd.concat([
+        pd.Series([str(uuid4()) for _ in range(sim.shape[0])]).to_frame("uuid"),
         pd.Series(l_ids).to_frame("l_id"),
         pd.Series(r_ids).to_frame("r_id"),
         pd.Series(l_names).to_frame("l_name"),
