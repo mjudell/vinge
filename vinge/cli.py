@@ -34,6 +34,8 @@ def main() -> int:
         return run_submit(args)
     elif args.task == "status":
         return run_status(args)
+    elif args.task == "fetch":
+        return run_fetch(args)
 
     parser.print_help()
 
@@ -153,6 +155,48 @@ def run_status(args) -> int:
     client.close()
 
     print(table)
+
+    return 0
+
+
+def run_fetch(args) -> int:
+    """
+    Fetch results from a completed job
+    """
+    job = utils.fetch_job(args.job)
+    job_dir = os.path.join(job["output_basedir"], job["name"])
+    job_pth = os.path.join(job_dir, "batch.json")
+
+    with open(job_pth, "r") as f:
+        batch = json.load(f)
+
+    client = OpenAI(api_key=utils.get_openai_key())
+
+    resp = client.files.content(batch["output_file_id"])
+
+    client.close()
+
+    with open(os.path.join(job_dir, "results.jsonl"), "w") as f:
+        print(resp.text, file=f)
+
+    results = []
+    for line in resp.text.splitlines():
+        r = json.loads(line)
+        result = {
+            "uuid": r["custom_id"],
+            "gpt_prob": score.parse_response(r["response"]["body"]["choices"][0]["message"]["content"])
+        }
+        results.append(result)
+
+    results = pd.DataFrame(results)
+
+    blocked = pd.read_csv(os.path.join(job_dir, "blocked.csv"), header=0)
+
+    results = pd.merge(blocked, results, on=["uuid"], how="left", validate="one_to_one")
+
+    assert results.gpt_prob.notnull().all()
+
+    results.to_csv(os.path.join(job_dir, "results.csv"), header=True, index=False)
 
     return 0
 

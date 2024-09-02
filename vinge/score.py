@@ -5,6 +5,7 @@ from typing import Any, Dict
 import json
 import openai
 import pandas as pd
+import re
 import time
 
 import vinge.config as config
@@ -25,12 +26,13 @@ def parse_response(val: str) -> Dict[str, Any]:
         Keys are left_name, right_name, and probability
     """
     matcher = re.compile(r"```json(.*)```", re.DOTALL)
-    if matcher.match(val) is not None:
-        val = matcher.match(val).groups()[0]
-
+    match = matcher.search(val)
+    if match is not None:
+        val = match.groups()[0]
     res = json.loads(val)
-
-    return float(res["probability"])
+    prob = float(res["probability"])
+    assert 0. <= prob <= 1.
+    return prob
 
 
 def fetch_openai_match_probs(
