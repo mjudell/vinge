@@ -34,9 +34,9 @@ def run_configuration() -> int:
     if not os.path.exists(config.VINGE_DIR):
         os.makedirs(config.VINGE_DIR)
 
-    wts = os.path.join(config.VINGE_DIR, "mistral.gguf")
+    wts = os.path.join(config.VINGE_DIR, config.MISTRAL_WEIGHTS_FILE)
     if not os.path.exists(wts):
-        utils.fetch_file(config.MISTRAL_WEIGHTS, wts)
+        utils.fetch_file(config.MISTRAL_WEIGHTS_URI, wts)
 
     key = input("Enter OpenAI API key:")
     utils.set_openai_key(key)
