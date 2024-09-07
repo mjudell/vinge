@@ -112,5 +112,5 @@ def read_namelist(pth: str) -> pd.DataFrame:
         Path on disk of name list
     """
     df = pd.read_csv(pth, header=0, dtype=object)
-    assert df.columns[0] == "id" and df.columns[1] == "name"
+    assert "id" in df.columns and "name" in df.columns
     return df
