@@ -32,8 +32,11 @@ vinge submit --job example
 # check status of submitted batch queries
 vinge status
 
-# fetch a complete query
+# fetch a complete query (look for results.csv in job output dir)
 vinge fetch --job example
+
+# run the linking process (look for links.csv in job output dir)
+vinge link --output-basedir vinge/examples
 ```
 
 # Architecture

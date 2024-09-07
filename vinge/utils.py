@@ -1,4 +1,5 @@
 from functools import lru_cache
+from prettytable import PrettyTable
 from typing import Any, Dict, List
 import json
 import os
@@ -24,6 +25,22 @@ def fetch_file(uri: str, pth: str) -> None:
         with open(pth, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
+    return None
+
+
+def print_table(df: pd.DataFrame) -> None:
+    """
+    Print a pandas dataframe
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        The dataframe to print
+    """
+    table = PrettyTable(df.columns.tolist())
+    for row in df.itertuples():
+        table.add_row(row[1:])
+    print(table)
     return None
 
 

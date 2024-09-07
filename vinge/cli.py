@@ -2,6 +2,7 @@ from openai import OpenAI
 from prettytable import PrettyTable
 import argparse
 import json
+import nltk
 import os
 import pandas as pd
 import requests
@@ -16,7 +17,7 @@ import vinge.utils as utils
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Link financial datasets on noisy names")
-    parser.add_argument("task", help="[ configure | init | submit | status | fetch ]", type=str)
+    parser.add_argument("task", help="[ configure | init | submit | status | fetch | link ]", type=str)
     parser.add_argument("--job", help="Unique identifier for this job", type=str)
     parser.add_argument("--ngram-candidates", help="Number of candidates derived from ngram embeddings", type=int)
     parser.add_argument("--mistral-candidates", help="Number of candidates derived from Mistral embeddings", type=int)
@@ -36,6 +37,8 @@ def main() -> int:
         return run_status(args)
     elif args.task == "fetch":
         return run_fetch(args)
+    elif args.task == "link":
+        return run_link(args)
 
     parser.print_help()
 
@@ -199,6 +202,48 @@ def run_fetch(args) -> int:
     results.to_csv(os.path.join(job_dir, "results.csv"), header=True, index=False)
 
     utils.delete_job(args.job)
+
+    return 0
+
+
+def run_link(args) -> int:
+    """
+    Pick the best links from the results
+    """
+    results = pd.read_csv(os.path.join(args.output_basedir, "results.csv"), header=0)
+
+    gpt_prob = results.groupby(["l_id", "r_id"]) \
+                      .gpt_prob.mean() \
+                      .to_frame("gpt_prob") \
+                      .reset_index(drop=False)
+
+    max_prob = gpt_prob.groupby("l_id") \
+                       .gpt_prob.max() \
+                       .to_frame("max_gpt_prob") \
+                       .reset_index(drop=False)
+
+    df = pd.merge(results, max_prob, on=["l_id"], how="left", validate="many_to_one")
+
+    df = df[df.gpt_prob == df.max_gpt_prob]
+
+    df = df.sort_values(by=["l_id", "r_id", "block_method"])
+    df = df.groupby(["l_id", "r_id"]).first().reset_index(drop=False)
+
+    link_counts = df.groupby("l_id").r_id.nunique()
+
+    if link_counts.max() > 1:
+        errors = df[df.l_id.isin(link_counts[link_counts>1].index)]
+        errors = errors[["l_id", "r_id", "l_name", "r_name", "max_gpt_prob"]].rename(columns={"max_gpt_prob":"gpt_prob"})
+        errors = errors.sort_values(by=["l_id", "r_id"], ascending=True)
+        utils.print_table(errors)
+        print("Detected duplicate best links")
+        return 1
+
+    df = df[["l_id", "r_id", "l_name", "r_name", "max_gpt_prob"]].rename(columns={"max_gpt_prob":"gpt_prob"})
+
+    df["edit_distance"] = df.apply(lambda row: nltk.edit_distance(row.l_name, row.r_name), axis=1)
+
+    df.to_csv(os.path.join(args.output_basedir, "links.csv"), header=True, index=False)
 
     return 0
 
