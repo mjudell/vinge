@@ -7,12 +7,12 @@ Link financial datasets using noisy company names.
 Linux only. Do not parallelize with `xargs`.
 
 ```bash
-# (optional) enable gpu support on debian
-bash vinge/gpu.sh
-
 # install
 git clone https://github.com/mjudell/vinge.git
 pip install ./vinge
+
+# (optional) enable gpu support on debian
+bash vinge/gpu.sh
 
 # configure (pull language model binaries, configure api keys, etc)
 vinge configure
